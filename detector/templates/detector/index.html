@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Detection System</title>
+    {% load static %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .neon-border {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .neon-border::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
+            z-index: -1;
+            animation: borderGlow 3s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .gradient-text {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: gradient 3s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hover-card {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); }
+        }
+
+        .stats-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .button-glow {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .button-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .button-glow:active {
+            transform: translateY(0);
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(0, 255, 255, 0.3);
+            animation: scan 2s linear infinite;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="scanline"></div>
+    
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-5xl md:text-7xl font-bold mb-4 gradient-text">Face Detection</h1>
+            <p class="text-xl text-gray-400">Advanced AI-Powered Face Analysis System</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Video Feed Section -->
+            <div class="neon-border rounded-xl overflow-hidden">
+                <div class="glass-morphism p-6">
+                    <h2 class="text-2xl font-bold mb-4 gradient-text">Live Feed</h2>
+                    <div class="relative aspect-video">
+                        <video id="video" class="w-full h-full rounded-lg" autoplay playsinline></video>
+                        <canvas id="canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="neon-border rounded-xl overflow-hidden">
+                <div class="glass-morphism p-6 h-full">
+                    <h2 class="text-2xl font-bold mb-4 gradient-text">Detection Results</h2>
+                    <div id="results" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                        <div class="result-card p-4 rounded-lg">
+                            <p class="text-gray-400">Waiting for detection...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="text-center mb-8">
+            <button id="startButton" class="button-glow px-8 py-4 rounded-xl text-lg font-bold">
+                Start Detection
+            </button>
+        </div>
+
+        <!-- Stats Panel -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="stats-card p-6 rounded-xl">
+                <h3 class="text-xl font-bold gradient-text mb-4">System Status</h3>
+                <div class="space-y-2">
+                    <p class="text-gray-300">Camera: <span id="cameraStatus" class="text-green-400">Ready</span></p>
+                    <p class="text-gray-300">Detection: <span id="detectionStatus" class="text-yellow-400">Idle</span></p>
+                </div>
+            </div>
+            <div class="stats-card p-6 rounded-xl">
+                <h3 class="text-xl font-bold gradient-text mb-4">Performance</h3>
+                <div class="space-y-2">
+                    <p class="text-gray-300">FPS: <span id="fpsCounter" class="text-green-400">0</span></p>
+                    <p class="text-gray-300">Latency: <span id="latencyCounter" class="text-green-400">0ms</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% csrf_token %}
+    <script src="{% static 'detector/face_detection.js' %}"></script>
+</body>
+</html> 
