@@ -35,6 +35,17 @@ for inference through webcam input.
 
 ---
 
+## How to Run
+
+1. Install dependencies:
+   pip install -r requirements.txt
+
+2. Run the application:
+   python main.py
+
+Press 'q' to exit the webcam.
+
+---
 ## Model Files
 
 Due to GitHub file size limitations, the pre-trained Caffe model files 
@@ -48,14 +59,3 @@ Please download the following models and place them in the project directory:
 
 You can download them from the official OpenCV repository:
 https://github.com/spmallick/learnopencv/tree/master/AgeGender
-
-
-## How to Run
-
-1. Install dependencies:
-   pip install -r requirements.txt
-
-2. Run the application:
-   python main.py
-
-Press 'q' to exit the webcam.
